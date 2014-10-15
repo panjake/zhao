@@ -12,7 +12,7 @@ use zhaoapi::Schema;
 our $VERSION = '0.1';
 
 get '/' => sub {
-    template 'index';
+    template 'index1';
 };
 
 get '/deploy' => sub {
