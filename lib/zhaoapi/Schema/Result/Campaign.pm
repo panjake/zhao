@@ -175,6 +175,8 @@ __PACKAGE__->add_columns(
   },
   "confirm_url",
   { data_type => "varchar", is_nullable => 1, size => 255 },
+  "key",
+  { data_type => "varchar", is_nullable => 0, size => 45 },
   "remark",
   { data_type => "text", is_nullable => 1 },
   "last_update",

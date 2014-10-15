@@ -1,7 +1,7 @@
 package daemon::Click;
 
 use FindBin qw( $Bin );
-use lib "$Bin/../Daemon";
+use lib "$Bin/../daemon";
 use Moose;
 use namespace::autoclean;
 use URI;

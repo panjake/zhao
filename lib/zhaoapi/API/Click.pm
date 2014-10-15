@@ -7,6 +7,8 @@ use Data::Dump qw/dump/;
 use zhaoapi::Schema;
 use zhaoapi::Common::Tools;
 use Try::Tiny;
+use zhaoapi::Common::MD5;
+use Storable qw( dclone );
 set serializer => 'JSON';
 
 use parent qw(zhaoapi::API);
@@ -80,13 +82,14 @@ get '/api/click' => sub {
 
 };
 
-
-
-
+#############################################
+# http://0.0.0.0:3000/api/confirm?promotion_id=1101&mac=&idfa=B219B8B6-C06D-4DEA-9814-F9B8D1190EC2&sign=xxx
+#
+#
 get '/api/confirm' => sub {
     my $response = session('response');
     if($response){
-      return $response;
+        return $response;
     }
 
     my $user = session('user');
@@ -100,12 +103,18 @@ get '/api/confirm' => sub {
         return  {'success'=>0, 'msg'=>'promotion is not available.'};
     }
 
-    unless( $campaign->is_available ){
-        return  {'success'=>0, 'msg'=>'promotion is not available.'};
-    }
+    ## check sign
+    my $sign = new zhaoapi::Common::MD5({ key => $campaign->key });
 
+    my $param = dclone request->params;
+    my $taintd = delete $param->{sign};
+
+    unless($taintd and $taintd eq $sign->md5digest( $param ) ){
+        return  {'success'=>0, 'msg'=>'sign lost or not match.'};
+    }
+    
     my $achieve = $campaign->search_related('achieves', {
-      user_id       => $user->id,
+        user_id       => $user->id,
     })->single;
 
     unless($achieve){
@@ -118,46 +127,46 @@ get '/api/confirm' => sub {
             campaign_id   => $campaign->id,
             create_time   => \'NOW()',
         });
-        
+
         $achieve = $campaign->search_related('achieves', {
-          user_id       => $user->id,
+            user_id       => $user->id,
         })->single;
     }
 
     unless ( defined $achieve->is_accepted ) {
-        my $click =  $user->click_of_campaign( $campaign );
+        my $click = $user->click_of_campaign( $campaign );
 
         if($click){
             $achieve->click_id( $click->click_id );
             $achieve->media_id( $click->media_id );
 
             my $txn = sub {
-              my $offer = $campaign->price_a;
-              my $commission = $campaign->price_b;
+                my $offer = $campaign->price_a;
+                my $commission = $campaign->price_b;
 
-              my $ss = schema->resultset('Campaign')->search( {
-                  "spending + $offer" => { '<=' => $campaign->budget }
-                } )->first;
+                my $ss = schema->resultset('Campaign')->search( {
+                    "spending + $offer" => { '<=' => $campaign->budget }
+                  } )->first;
 
-              my $new_spending = $ss->spending + $offer;
-              
-              my $rv = $ss->update({
-                  spending => $new_spending,
-              });
-              # if no rows were affected, then update returns "0E0"
-              
-              ##modify by pan.wujie 2012-01-22##
-              if ( $rv > 0 ) {
-                  $achieve->earnings( $offer );
-                  $achieve->expenses( $commission );
-                  $achieve->is_accepted(1);
-                  $achieve->accepted_time(\'NOW()');
-              }
-              else {
-                  $achieve->is_accepted(0);
-                  $achieve->accepted_time(\'NOW()');
-              }
-              $achieve->update;
+                my $new_spending = $ss->spending + $offer;
+                
+                my $rv = $ss->update({
+                    spending => $new_spending,
+                });
+                # if no rows were affected, then update returns "0E0"
+                
+                ##modify by pan.wujie 2012-01-22##
+                if ( $rv > 0 ) {
+                    $achieve->earnings( $offer );
+                    $achieve->expenses( $commission );
+                    $achieve->is_accepted(1);
+                    $achieve->accepted_time(\'NOW()');
+                }
+                else {
+                    $achieve->is_accepted(0);
+                    $achieve->accepted_time(\'NOW()');
+                }
+                $achieve->update;
             };
 
             try {

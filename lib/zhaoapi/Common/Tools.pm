@@ -74,50 +74,46 @@ sub replace_url{
   $url =~ s/\[DATE\]/$last_update/ig;
   $url =~ s/\[CLICK_ID\]/$click_id/ig;
 
-  if( $url =~ /\[CONFIRM_URL\]/i ){
+  if( $url =~ /\[CALLBACK\]/i ){
 	my $confirm_url = get_confirm_url($campaign, $media_id, $user);
 	$confirm_url = uri_escape($confirm_url);
 	
-	$url =~ s/\[CONFIRM_URL\]/$confirm_url/ig;
+	$url =~ s/\[CALLBACK\]/$confirm_url/ig;
   }
 
   return $url;
 }
 
-# sub get_confirm_url{
-#   my ($campaign, $media_id, $user) = @_;
+sub get_confirm_url{
+  my ($campaign, $media_id, $user) = @_;
   
-#   my $confirm_url = "http://appdriver.cn/";
-#   my $action = "6.0.".$campaign->site->site_id."ca";
-#   $confirm_url .= $action;
+  my $confirm_url = "http://182.92.131.59:3000/";
+  my $action = "api/confirm";
+  $confirm_url .= $action;
   
-#   my $uri = new URI( $confirm_url );
+  my $uri = new URI( $confirm_url );
   
-#   my $uinfo = $campaign->site->platform_id==3?$user->identifier:($user->identifier2 || '');
+  my $uinfo = $user->identifier2 || '';
   
-#   my $openudid = $user->identifier || '';
-#   my $idfa = $user->identifier3 || '';
+  my $idfa = $user->identifier;
   
-#   my $param = {
-#     'campaign_id' => $campaign->campaign_id,
-#     'advertisement' => 'install',
-#     'msource' => $media_id,
-#     'uinfo' => $uinfo,
-#     'openudid' => $openudid,
-#     'idfa' => $idfa,
-#   };
+  my $param = {
+    'promotion_id' => $campaign->campaign_id,
+    'mac' => $uinfo,
+    'idfa' => $idfa,
+  };
 
-#   my @digest_params = sort keys %$param;
-#   my $param_sort = "";
-#   map{ $param_sort .= "$param->{$_}," } @digest_params;
-#   $param_sort .= $campaign->site->cipher_hex;
+  my @digest_params = sort keys %$param;
+  my $param_sort = "";
+  map{ $param_sort .= "$param->{$_}," } @digest_params;
+  $param_sort .= $campaign->key;
   
-#   my $digest = md5_hex($param_sort);
-#   $param->{digest} = $digest;
+  my $digest = md5_hex($param_sort);
+  $param->{sign} = $digest;
   
-#   $uri->query_param_append( $_, $param->{ $_ } ) foreach keys %$param;
-#   return $uri;
-# }
+  $uri->query_param_append( $_, $param->{ $_ } ) foreach keys %$param;
+  return $uri;
+}
 
 
 
