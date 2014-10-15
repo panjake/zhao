@@ -1,0 +1,21 @@
+#!/usr/bin/perl
+
+use FindBin qw( $Bin );
+use lib "$Bin/../lib";
+use daemon::Forward;
+
+my $daemon = daemon::Forward->new_with_options(
+  basedir      => "$Bin/..",
+  stop_timeout => 60,
+);
+
+my ( $command ) = @{ $daemon->extra_argv };
+defined $command || die "No command specified";
+
+$daemon->start   if $command eq 'start';
+$daemon->status  if $command eq 'status';
+$daemon->restart if $command eq 'restart';
+$daemon->stop    if $command eq 'stop';
+
+warn( $daemon->status_message );
+exit( $daemon->exit_code );
