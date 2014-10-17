@@ -14,6 +14,9 @@ before sub{
 	if($mac){
 		$mac = lc($mac);
 		$mac =~ s/://g;
+		if( $mac eq '020000000000'){
+			$mac = undef;
+		}
 	}
 
 	if( ( $idfa and $idfa =~ /^[\w-]+$/ ) 
