@@ -69,11 +69,11 @@ sub forward{
                 a.media_id,
                 m.callback
             from achieve  a
-            join click cc on cc.id = a.click_id
-            join user u on u.id = a.user_id
-            join campaign c on a.campaign_id = c.id
-            join media m on m.id = a.media_id
-            where a.uuid = ?
+            join click cc on cc.click_id = a.click_id
+            join user u on u.user_id = a.user_id
+            join campaign c on a.campaign_id = c.campaign_id
+            join media m on m.media_id = a.media_id
+            where a.achieve_id = ?
             limit 1
           ",[$uuid]);
     }
@@ -164,7 +164,31 @@ sub uri_to_forward {
     my $uri =  new URI( $achieve->{callback} );
     my $replace_flag = 0;
 
-    if( $uri ){
+
+    if( $achieve->{media_id} == 21 ){# domob
+        my $appid = $achieve->{identifier} || '';
+        my $postback_url = 'http://e.domob.cn/track/ow/api/postback';
+        my $appid_key = { 
+                          582934943 => '5948a096364b5e31f900887878e0a8d8',
+                       };
+        my $mac =  $achieve->{mac} || '';
+        my $idfa = $achieve->{idfa} || '';
+
+        my $sign_param = {
+            appId => $appid,
+            udid => $mac,
+            ifa => $idfa,
+            oid => '',
+        };
+
+        my $str = "$sign_param->{appId},$sign_param->{udid},,$sign_param->{ifa},$sign_param->{oid},$appid_key->{$appid}"; #md5(appid,udid,ma,ifa,oid,key);
+        $sign_param->{sign}  = md5_hex($str);
+
+        $uri = new URI( $postback_url );
+        $uri->query_param_append( $_, $sign_param->{ $_ } ) foreach keys %$sign_param;
+    }
+    ## common
+    elsif( $uri ){
       my $appname = $achieve->{site_name} || "";
       my $campaign_id = $achieve->{campaign_id};
 
@@ -267,7 +291,7 @@ sub uri_to_forward {
       $uri->query_param_append( $_, $param->{ $_ } ) foreach keys %$param;
     }
     
-
+    warn $uri;
     return $uri;
 }
 

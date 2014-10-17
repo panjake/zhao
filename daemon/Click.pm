@@ -36,7 +36,7 @@ sub callback_confirm {
     my $callback_confirm = $dba->select("
         select 
           *
-        from queue_forward_click 
+        from click_to_forward 
         where forward_time <= now() and attempted < 3 
         order by forward_time
         limit 0,100
@@ -55,29 +55,24 @@ sub forward {
   my $uri;
 
   my $dba = new daemon::DB;
-
   if ( $callback_confirm ) {
-        my $click_id = $callback_confirm->{id};
+        my $click_id = $callback_confirm->{click_id};
         
         $click = $dba->select_row("
             select
-                cc.id click_id,
-                s1.name site_name,
-                u.identifier user_identifier,
-                u.tracking1 idfa,
-                u.tracking2 mac,
-                u.tracking3 openudid,
+                cc.click_id,
+                u.identifier idfa,
+                u.identifier2 mac,
                 cc.ip,
-                cc.media_identifier identifier,
+                cc.identifier,
                 cc.date,
                 cc.campaign_id,
                 cc.media_id,
-                c.click_notify_url confirm_url
+                c.confirm_url 
             from click cc
-            join user u on u.id = cc.user_id
-            join campaign c on cc.campaign_id = c.id
-            join site s1 on c.site_id = s1.id 
-            where cc.id = ?
+            join user u on u.user_id = cc.user_id
+            join campaign c on cc.campaign_id = c.campaign_id
+            where cc.click_id = ?
             limit 1
           ",[$click_id]);
     }
@@ -85,12 +80,14 @@ sub forward {
   if ( $click ) {
   	# TODO make a FactoryModel for both REQ AND RES
     $uri = $self->uri_to_forward( $click );
-    $res = $self->ua->get( $uri->as_string );      
+    $res = $self->ua->get( $uri->as_string );  
+
   	chomp( $content = $res->content );
   }
-  
+
   my $response;  
   if ( $res && $res->is_success && defined $content ) {
+    
       eval{
         $response = from_json($content);
       };
@@ -117,7 +114,7 @@ sub forward {
     $self->_defer( $dba, $callback_confirm, $content );
     ###log##
     if(defined $content){
-        $dba->execute("delete from queue_forward_click where click_id = ? ",[$callback_confirm->{click_id}]);
+        $dba->execute("delete from click_to_forward where click_id = ? ",[$callback_confirm->{click_id}]);
     }
     ##log##
   }
@@ -126,7 +123,7 @@ sub forward {
 sub _forwarded {
     my ( $self, $dba, $callback_confirm ) = @_;
 
-    $dba->execute("delete from queue_forward_click where click_id = ? ",[$callback_confirm->{click_id}]);
+    $dba->execute("delete from click_to_forward where click_id = ? ",[$callback_confirm->{click_id}]);
 }
 
 
@@ -142,7 +139,7 @@ sub _defer {
     }
     
     $dba->execute("
-        update queue_forward_click 
+        update click_to_forward 
           set attempted = attempted + 1, 
           forward_time = DATE_ADD( NOW(), INTERVAL $minute MINUTE )  
           $sql_part 
@@ -167,8 +164,8 @@ sub uri_to_forward {
   }
   else{
       $param = {
-        adid        => $click->{campaign_id},
-        identifier  => $click->{identifier},
+        promotion_id  => $click->{campaign_id},
+        identifier    => $click->{identifier},
       };
             
       $param->{'mac'}  = $click->{mac}  || '';
@@ -184,9 +181,8 @@ sub replace_url{
   my ( $url, $click ) = @_;
 
   ###########deal uinfo###
-  my $id1 = $click->{user_identifier}  || ""; #mac or idfa
-  my $id2 = $click->{tracking2} || ""; #mac
-  my $id3 = $click->{tracking1} || ""; #idfa
+  my $id3 = $click->{idfa}  || ""; #mac or idfa
+  my $id2 = $click->{mac} || ""; #mac
 
   my $mac_up = uc($id2);##大写
   my $last_update = $click->{last_update};
@@ -252,23 +248,14 @@ sub replace_url{
   $url =~ s/\[MAC\]/$id2/ig;
   $url =~ s/\[MAC_UP\]/$mac_up/ig;
   $url =~ s/\[MAO_MAC_UP\]/$mao_mac_up/ig;
-  $url =~ s/\[UDID\]/$id1/ig;
   $url =~ s/\[IDFA\]/$id3/ig;
   $url =~ s/\[IDFA_NO_LINE\]/$idfa_no_line/ig;
   $url =~ s/\[MEDIA_ID\]/$media_id/ig;
-  $url =~ s/\[CAMPAIGN_ID\]/$campaign_id/ig;
+  $url =~ s/\[PROMOTION_ID\]/$campaign_id/ig;
   $url =~ s/\[IP\]/$ip/ig;
   $url =~ s/\[DATE\]/$last_update/ig;
-  my $timestamp = EasyTool::time_2_timestamp($last_update);
-  $url =~ s/\[TIMESTAMP\]/$timestamp/ig;
   $url =~ s/\[CLICK_ID\]/$click_id/ig;
 
-  # if( $url =~ /\[CONFIRM_URL\]/i ){
-  #   	my $confirm_url = get_confirm_url($click);
-  #   	$confirm_url = uri_escape($confirm_url);
-    	
-  #   	$url =~ s/\[CONFIRM_URL\]/$confirm_url/ig;
-  # }
   return $url;
 }
 

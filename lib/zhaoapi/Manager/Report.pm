@@ -1,5 +1,7 @@
 package zhaoapi::Manager::Report;
 use Dancer ':syntax';
+use strict;
+use warnings;
 
 =pod
 This is a minimal example of using Bootstrap's Nav-Bar with embedded login-form.
@@ -17,9 +19,10 @@ The dancer implemetation is severely lacking:
    Dancer calls).
 
 =cut
-prefix 'admin';
 
-get '/login' => sub { template 'manager/navbar_login' };
+prefix '/admin';
+
+get '/login' => sub { warn 'login'; template 'manager/navbar_login', {}, { layout => 'main' }; };
 
 post '/login' => sub {
 	## Get the <FORM> CGI parameters

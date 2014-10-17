@@ -6,6 +6,8 @@ use Cwd;
 use Sys::Hostname;
 use zhaoapi::API::Click;
 use zhaoapi::Schema;
+use zhaoapi::Manager::Report;
+use zhaoapi::Manager;
 
 
 

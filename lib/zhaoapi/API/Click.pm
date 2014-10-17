@@ -77,6 +77,18 @@ get '/api/click' => sub {
     });
 
     my $location = $campaign->location;
+
+    if($campaign->confirm_url and $campaign->confirm_url ne ''){
+      #click_id, forward_time, attempted, message, create_time
+      my $callback = schema->resultset('ClickToForward')->create({
+        click_id     => $click->id,
+        forward_time => \'NOW()',
+        attempted    => 0,
+        create_time   => \'NOW()',
+      });
+    }
+
+
     $location = zhaoapi::Common::Tools::replace_url($location, $campaign, $user, $click);      
     redirect  $location;
 
@@ -104,13 +116,17 @@ get '/api/confirm' => sub {
     }
 
     ## check sign
-    my $sign = new zhaoapi::Common::MD5({ key => $campaign->key });
+    unless(request->address =~ /^211\.151\.17\.36$/ 
+        or request->address =~ /^222\.73\.96\.250$/
+        or request->address =~ /^127\.0\.0\.1$/){
+        my $sign = new zhaoapi::Common::MD5({ key => $campaign->key });
 
-    my $param = dclone request->params;
-    my $taintd = delete $param->{sign};
+        my $param = dclone request->params;
+        my $taintd = delete $param->{sign};
 
-    unless($taintd and $taintd eq $sign->md5digest( $param ) ){
-        return  {'success'=>0, 'msg'=>'sign lost or not match.'};
+        unless($taintd and $taintd eq $sign->md5digest( $param ) ){
+            return  {'success'=>0, 'msg'=>'sign lost or not match.'};
+        }
     }
     
     my $achieve = $campaign->search_related('achieves', {
