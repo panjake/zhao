@@ -91,8 +91,7 @@ sub forward{
         chomp( $content = $res->content );
     }
 
-
-    if ( $res && $res->is_success && _can_content_be_handled( $content ) ) {
+    if ( $res && $res->is_success && (_can_content_be_handled( $content ) or _can_content_be_handled_json( $content )) ) {
         $self->_forwarded( $dba, $achieve_to_forward, $content );
     }
     else {
@@ -105,16 +104,16 @@ sub forward{
 
 sub _forwarded {
     my ( $self, $dba, $achieve_to_forward, $is_forwarded ) = @_;
-    
+
     eval {
         $dba->execute("
             update achieve 
               set is_forwarded = ?, 
-              forward_time = now() 
+              forwarded_time = now() 
             where achieve_id = ?
             ",[$is_forwarded, $achieve_to_forward->{achieve_id}]);
 
-        #$dba->execute("delete from queue_forward_achieve where achieve_id = ? ",[$achieve_to_forward->{achieve_id}]);
+        $dba->execute("delete from achieve_to_forward where achieve_id = ? ",[$achieve_to_forward->{achieve_id}]);
     };
     if ($@) {
       warn $@;
@@ -291,7 +290,6 @@ sub uri_to_forward {
       $uri->query_param_append( $_, $param->{ $_ } ) foreach keys %$param;
     }
     
-    warn $uri;
     return $uri;
 }
 
