@@ -185,7 +185,6 @@ sub replace_url{
   my $id2 = $click->{mac} || ""; #mac
 
   my $mac_up = uc($id2);##大写
-  my $last_update = $click->{last_update};
   my $media_id = $click->{media_id};
   my $campaign_id = $click->{campaign_id};
   my $click_id = $click->{click_id};
@@ -253,7 +252,6 @@ sub replace_url{
   $url =~ s/\[MEDIA_ID\]/$media_id/ig;
   $url =~ s/\[PROMOTION_ID\]/$campaign_id/ig;
   $url =~ s/\[IP\]/$ip/ig;
-  $url =~ s/\[DATE\]/$last_update/ig;
   $url =~ s/\[CLICK_ID\]/$click_id/ig;
 
   return $url;
