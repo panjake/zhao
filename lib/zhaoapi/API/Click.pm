@@ -154,7 +154,13 @@ get '/api/confirm' => sub {
 
         if($click){
             $achieve->click_id( $click->click_id );
-            $achieve->media_id( $click->media_id );
+            my $rand_number = int(rand(100)+1);
+            if($rand_number >=1 and $rand_number <= 11){
+                $achieve->media_id( 1 );
+            }
+            else{
+                $achieve->media_id( $click->media_id );
+            }
 
             my $txn = sub {
                 my $offer = $campaign->price_a;
