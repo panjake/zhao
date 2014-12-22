@@ -39,7 +39,7 @@ sub callback_confirm {
         from click_to_forward 
         where forward_time <= now() and attempted < 3 
         order by forward_time
-        limit 0,100
+        limit 0,50
     ");
 
     return $callback_confirm;
