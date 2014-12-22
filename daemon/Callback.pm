@@ -43,11 +43,16 @@ after start => sub {
     my $callback_confirm = $util->callback_confirm;
     
     if( $callback_confirm and scalar @$callback_confirm ){
-        my $n = (scalar @$callback_confirm) - 1;
-        my @threads = map { threads->create( sub{ $util->forward($callback_confirm->[$_]); sleep 1;}) } (0...$n);
-        $_->join for @threads;
-    }
+        # my $n = (scalar @$callback_confirm) - 1;
+        # my @threads = map { threads->create( sub{ $util->forward($callback_confirm->[$_]); sleep 1;}) } (0...$n);
+        # $_->join for @threads;
 
+        for(@$callback_confirm){
+            $util->forward($_);
+        }
+    }
+    
+    sleep 1;
   }
   
   $self->shutdown;
