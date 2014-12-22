@@ -14,7 +14,9 @@ get '/admin' => sub{
 
 
 get '/restart' => sub{
-	my $sys = `perl /var/www/zhao/bin/check_forward.pl &`;
+	my $sys = `perl /var/www/zhao/bin/check_forward.pl`;
+	
+	sleep 2;
 	warn $sys;
 };
 
