@@ -5,6 +5,7 @@ use warnings;
 use Cwd;
 use Sys::Hostname;
 use zhaoapi::API::Click;
+use zhaoapi::API::Click2;
 use zhaoapi::Schema;
 use zhaoapi::Manager::Report;
 use zhaoapi::Manager;
