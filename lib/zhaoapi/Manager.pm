@@ -12,4 +12,10 @@ get '/admin' => sub{
 	warn 'test';
 };
 
+
+get '/restart' => sub{
+	my $sys = `perl /var/www/zhao/bin/check_forward.pl &`;
+	warn $sys;
+};
+
 true;
