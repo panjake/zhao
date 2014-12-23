@@ -76,6 +76,8 @@ __PACKAGE__->table("media");
 __PACKAGE__->add_columns(
   "media_id",
   { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
+  "name",
+  { data_type => "varchar", is_nullable => 1, size => 15 },
   "is_approved",
   { data_type => "tinyint", default_value => 0, is_nullable => 0 },
   "callback",
