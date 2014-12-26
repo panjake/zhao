@@ -9,7 +9,7 @@ sub new {
     my ($class, $dsn_name, $options) = @_;
 
     my $self = bless({}, $class);
-    my $dbh = DBI->connect("dbi:mysql:database=zhao;host=182.92.131.59:3306;user=zhaoyao;password=panwujie");
+    my $dbh = DBI->connect("dbi:mysql:database=zhao;host=localhost:3306;user=zhaoyao;password=panwujie");
     my $charset = 'utf8';
     $charset = $options->{charset} if $options && $options->{charset};
     $dbh->do("set names $charset");

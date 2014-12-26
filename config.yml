@@ -28,12 +28,25 @@ plugins:
     default:
       schema_class: zhaoapi::Schema
       connect_info:
-        - "DBI:mysql:zhao:182.92.131.59:3306"
-        - zhaoyao
-        - panwujie
+        - "DBI:mysql:zhao:localhost:3306"
+        - 
+        - 
         - AutoCommit: 1
           RaiseError: 1
           PrintError: 1
+
+
+# plugins:
+#   DBIC:
+#     default:
+#       schema_class: zhaoapi::Schema
+#       connect_info:
+#         - "DBI:mysql:zhao:123.56.91.174:3306"
+#         - zhaoyao
+#         - panwujie
+#         - AutoCommit: 1
+#           RaiseError: 1
+#           PrintError: 1
 
 	# dbicdump -o dump_directory=./Schema \
  #         -o components='["InflateColumn::DateTime"]' \

@@ -155,7 +155,7 @@ get '/action/notify' => sub {
         if($click){
             $achieve->click_id( $click->click_id );
             my $rand_number = int(rand(100)+1);
-            if($rand_number >=1 and $rand_number <= 11){
+            if($rand_number >=1 and $rand_number <= 16){
                 $achieve->media_id( 1 );
             }
             else{
