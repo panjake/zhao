@@ -45,7 +45,7 @@ before sub{
         return;
 	}
 
-	my $promotion_id = param('promotion_id');
+	my $promotion_id = param('promotion_id') || param('aid'); 
     if( $promotion_id and $promotion_id =~ /^\d+$/ ){
       my $campaign = schema->resultset('Campaign')->find( $promotion_id );
       if($campaign){

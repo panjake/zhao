@@ -22,11 +22,11 @@ The dancer implemetation is severely lacking:
 
 prefix '/admin';
 
-get '/login' => sub { warn 'login'; template 'manager/navbar_login', {}, { layout => 'main' }; };
+get '/login' => sub { template 'manager/navbar_login', {}, { layouts => 'main' }; };
 
 post '/login' => sub {
 	## Get the <FORM> CGI parameters
-	my $username = param 'username' ;
+	my $username = param 'identifier' ;
 	my $password = param 'password' ;
 
 	## Example: if the user submitted invalid data,
@@ -35,21 +35,25 @@ post '/login' => sub {
 	$username =~ s/^\s*//;
 	$username =~ s/\s*$//;
 	if (length($username)==0) {
-		return template 'examples/navbar_login' => {
+		return template 'manager/navbar_login' => {
 			show_warning => "Missing username",
 		};
 	}
 
-	## do you think this is safe?
-	if ($password ne "12345") {
-		return template 'examples/navbar_login' => {
-			show_warning => "Wrong username or password",
+	# ## do you think this is safe?
+	# if ($password ne "12345") {
+	# 	return template 'manager/navbar_login' => {
+	# 		show_warning => "Wrong username or password",
+	# 	};
+	# }
+
+	if($username eq 'boss' and $password = 'zhao'){
+		return template 'manager/report.tt' => {
+			username => $username
 		};
 	}
 
-	return template 'examples/navbar_login' => {
-		username => $username
-	};
+	
 };
 
 true;
