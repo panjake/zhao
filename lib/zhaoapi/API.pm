@@ -9,6 +9,10 @@ set serializer => 'JSON';
 
 # find or create user
 before sub{
+	if(param('publisher_id') or param('app_id') ){
+		return;
+	}
+
 	my $idfa = param('idfa');
 	my $mac  = param('mac');
 	if($mac){
