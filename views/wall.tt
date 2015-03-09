@@ -1,0 +1,34 @@
+<div id="content" data-role="content">
+	<div data-appid="" data-billing-relation-id="0" data-country="CN" data-integration="" data-language="zh" data-type="mobile" data-userid="" id="offers">
+		<ul>
+			[% FOREACH item IN data.item %]
+			<li data-installed="{{$v->is_achieved}}" data-goal="{{$v->click}}" class="scarcity-offer odd" data-url="" data-track="off" data-lp="" data-interstitial="off" data-page="1">
+				<div class="icon">						
+					<img src="[% item.icon %]" class="" style="visibility: visible;">					
+					<!-- <img src="placeholder.png" class="processed" style="visibility: visible;"> -->
+				</div>
+				<div class="reward">
+					<div class="value">[% item.point %]</div>
+				</div>
+				
+				<div class="data">						
+					<h2>[% item.name %]</h2>
+					<div class="action">
+						[% IF item.status == 2 %]
+						<span class="tag achieved">已完成</span>							
+						[% END %]
+						<!--  <span class="tag free">免费</span> -->
+						<span class="text draft">[% item.conditions %]</span> <span class="offer-long-text"> </span> <span class="interstitial-btn-text">获取 [% item.point %] [% data.currency %]</span>
+					</div>
+					<div class="title-truncation"></div>
+				</div>
+			</li>
+			[% END %]
+		</ul>
+	</div>
+	</div>
+	<footer>
+<!-- 		<a href="" class="button left" id="btn-supp" rel="external">客服支持</a> 
+ -->		<div class="right"></div>
+	</footer>
+</div>

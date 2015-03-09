@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+<title>[% data.title %]</title>
+<script type="text/javascript" src="[% uri.base_url %]/library/jquery/jquery-1.11.1.min.js"></script>
+<link href="[% uri.base_url %]/wall/flat.css" media="all" rel="stylesheet" type="text/css" />
+<link href="[% uri.base_url %]/wall/jquery.mobile.structure-1.3.2.min.css" media="all" rel="stylesheet" type="text/css" />
+<link href="[% uri.base_url %]/wall/jquery.mobile.theme-1.3.2.min.css" media="all" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="[% uri.base_url %]/wall/jquery.mobile-1.3.2.min.js"></script>
+<style>
+.ui-content {padding:0px}
+p#icon {text-align:center}
+p#icon img {width:128px}
+/* #dialog .ui-header {background:#14b9d6!important} */
+</style>
+</head>
+<body class="theme-mofw_flat" >
+<div class="page-offers" id="main" data-role="page">
+	<header><h1>[% data.title %]</h1></header>
+
+	[% content %]
+
+<div data-role="page" id="dialog">
+  <div data-role="header">
+    <h2 id="title"></h2>
+  </div>
+  <div data-role="content">
+  	<p id="icon"></p>
+    <p id="draft"></p>
+    <a id="download" href="#" target="_blank" data-role="button" data-theme="b">下载</a>
+	<a href="javacript:;" data-role="button" data-rel="back" data-theme="c">返回</a>
+  </div>
+</div>
+<script type="text/javascript" src="[% uri.base_url %]/wall/app.js"></script>
+
+</body>
+</html>
