@@ -48,7 +48,7 @@ post '/deploy' => sub {
 
 
 
-get '/sdk/list' => sub {
+any '/sdk/list' => sub {
 	set serializer => 'JSON';
 
 	use Storable qw( dclone );
@@ -143,7 +143,7 @@ get '/sdk/list' => sub {
 };
 
 
-get '/sdk/point' => sub {
+any '/sdk/point' => sub {
 	my $reduce = param('reduce');
 
 	my $user_point = schema->resultset('UserPoint')->search({
@@ -174,7 +174,7 @@ get '/sdk/point' => sub {
 
 };
 
-get '/sdk/action' => sub {
+any '/sdk/action' => sub {
 
 	my $promotions = {
 		12 => {
