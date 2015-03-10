@@ -11,6 +11,8 @@ use zhaoapi::Schema;
 use zhaoapi::Manager::Report;
 use zhaoapi::Manager;
 
+use zhaoapi::Common::MD5;
+
 
 
 our $VERSION = '0.1';
@@ -54,12 +56,18 @@ any '/sdk/list' => sub {
 	use Storable qw( dclone );
 
 	my $param = dclone request->params;
-	# my $param = dclone request->params;
- #    my $taintd = delete $param->{sign};
+    my $taintd = delete $param->{sign};
+    my $sign = new zhaoapi::Common::MD5({ key => '22222222' });
 
- #    unless($taintd and $taintd eq $sign->md5digest( $param ) ){
- #        return  {'success'=>0, 'msg'=>'sign lost or not match.'};
- #    }
+    unless($taintd and $taintd eq $sign->md5digest( $param ) ){
+        return  {
+	        		'status' => 0,
+		            'title'   => '免费获取金币',
+		            'currency' => '金币',
+		            'ts'		=> time,
+		            'item'  => [],
+	        	};
+    }
 
 	my $promotions = {
 		12 => {
@@ -144,6 +152,24 @@ any '/sdk/list' => sub {
 
 
 any '/sdk/point' => sub {
+
+	use Storable qw( dclone );
+
+	my $param = dclone request->params;
+    my $taintd = delete $param->{sign};
+    my $sign = new zhaoapi::Common::MD5({ key => '22222222' });
+
+    unless($taintd and $taintd eq $sign->md5digest( $param ) ){
+        return  {
+	        		'status' => 0,
+		            'title'   => '免费获取金币',
+		            'currency' => '金币',
+		            'ts'		=> time,
+		            'item'  => [],
+	        	};
+    }
+
+
 	my $reduce = param('reduce');
 
 	my $user_point = schema->resultset('UserPoint')->search({
