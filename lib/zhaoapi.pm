@@ -161,11 +161,9 @@ any '/sdk/point' => sub {
 
     unless($taintd and $taintd eq $sign->md5digest( $param ) ){
         return  {
-	        		'status' => 0,
-		            'title'   => '免费获取金币',
-		            'currency' => '金币',
-		            'ts'		=> time,
-		            'item'  => [],
+	        		'status' => -9,
+		            'ts' => 13413411, 
+		            'point' => 0,
 	        	};
     }
 
