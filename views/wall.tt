@@ -2,7 +2,7 @@
 	<div data-appid="" data-billing-relation-id="0" data-country="CN" data-integration="" data-language="zh" data-type="mobile" data-userid="" id="offers">
 		<ul>
 			[% FOREACH item IN data.item %]
-			<li data-installed="{{$v->is_achieved}}" data-goal="{{$v->click}}" class="scarcity-offer odd" data-url="" data-track="off" data-lp="" data-interstitial="off" data-page="1">
+			<li data-installed="[% item.status %]" data-goal="[% item.jumpUrl %]" class="scarcity-offer odd" data-url="" data-track="off" data-lp="" data-interstitial="off" data-page="1">
 				<div class="icon">						
 					<img src="[% item.icon %]" class="" style="visibility: visible;">					
 					<!-- <img src="placeholder.png" class="processed" style="visibility: visible;"> -->
