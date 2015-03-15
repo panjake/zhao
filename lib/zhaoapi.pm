@@ -129,7 +129,7 @@ any '/sdk/list' => sub {
                       'jumpUrl' => 'http://www.sina.com',
                   },
                   {
-                      'name' => '云顶德州扑克HD',
+                      'name' => '德州扑克HD',
                       'icon' => 'http://appdriver.cn/static/images/site/3303.png?ver=1.29',
                       'promotionId' => 14,
                       'status' => $promotions->{14}->{status},
@@ -199,10 +199,93 @@ any '/sdk/point' => sub {
 		}
 	}
 	else{
-		return {'status'=>1, 'ts'=>13413411, 'point'=>$user_point->point}
+		return {'status'=>1, 'ts'=>13413411, 'point'=>$user_point->point};
 	}
 
 };
+
+
+any '/sdk/send_action' => sub {
+	set serializer => 'JSON';
+
+	my $publisher_margin = 100;
+
+	use Storable qw( dclone );
+
+	my $param = dclone request->params;
+    my $taintd = delete $param->{sign};
+    my $sign = new zhaoapi::Common::MD5({ key => '22222222' });
+
+    unless($taintd and $taintd eq $sign->md5digest( $param ) ){
+        return {'status'=> 0, 'ts'=>13413411 };
+    }
+
+	my $promotions = {
+		12 => {
+			'earnings'  => 4,
+			'expenses'	=> 3,
+			'status'	=> 1,
+		},
+		13 => {
+			'earnings'  => 5,
+			'expenses'	=> 3.5,
+			'status'	=> 1,
+		},
+		14 => {
+			'earnings'  => 3.5,
+			'expenses'	=> 2.5,
+			'status'	=> 1,
+		}
+	};
+
+
+	unless( $param->{promotion_id} and $param->{publisher_id} ){
+		return {'status' => 0, 'msg' => 'lost_params'}; 
+	}
+
+	my $point = $promotions->{$param->{promotion_id}}->{'expenses'} * $publisher_margin || 0;
+
+	if($param->{clear}){
+		schema->resultset('Action')->search({})->delete;
+		return {'status' => 1, 'msg' => 'deleted'};
+	}
+	elsif( exists $promotions->{$param->{promotion_id}} ){
+		my $action = schema->resultset('Action')->search({
+				user_id => 1,
+				promotion_id => $param->{promotion_id},
+			})->first;
+
+		if($action){
+			return {'status' => -1, 'msg' => 'has action'};
+		}
+
+		schema->resultset('Action')->create({
+	            achieve_id    => \'uuid()',
+	            date          => \'CURDATE()',
+	            user_id       => 1,
+	            promotion_id  => $param->{promotion_id},
+	            publisher_id  => $param->{publisher_id},
+	            create_time   => \'NOW()',
+			});
+
+		my $user_point  = schema->resultset('UserPoint')->find_or_create({
+	            publisher_id    => 1,
+        		user_id  => 1,
+			});
+
+		$point = $user_point->point + $point;
+
+		$user_point->point($point);
+		$user_point->update;
+
+		return {'status' => 1, 'msg' => 'successed'};
+	}
+	else{
+		return {'status' => -2, 'msg' => 'promotion not found'};
+	}
+
+};
+
 
 any '/sdk/action' => sub {
 
