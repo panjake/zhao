@@ -13,6 +13,7 @@ use zhaoapi::Manager;
 
 use utf8;
 use zhaoapi::Common::MD5;
+use Storable qw( dclone );
 use DateTime;
 
 
@@ -107,6 +108,7 @@ any '/sdk/list' => sub {
 		my $jump = 'http://182.92.131.59/shihuo_1.0.8_online_zol.apk';
 
 		push @$items, {
+			promotionId => $item->id,
 			earnings => $item->earnings,
 			expenses => $item->expenses,
 			status	 => $status,
@@ -121,6 +123,19 @@ any '/sdk/list' => sub {
 		};
 	}
 
+	$promotion->reset;
+	my $now = DateTime->today( time_zone => 'Asia/Shanghai' );
+	while (my $item = $promotion->next ) {
+		my $report = schema->resultset('ReportOfAction')->find_or_create({
+            date          => $now,
+            promotion_id  => $item->id,
+            publisher_id  => $param->{publisher_id},
+		});
+
+		$report->update({
+				view => \'view + 1',
+			});
+	}
 
     my $json = {'status' => 1,
             'title'   => ($publisher->sdk_title || ''),
@@ -144,9 +159,6 @@ any '/sdk/list' => sub {
 
 
 any '/sdk/point' => sub {
-
-	use Storable qw( dclone );
-
 	my $param = dclone request->params;
     my $taintd = delete $param->{sign};
     my $sign = new zhaoapi::Common::MD5({ key => '22222222' });
@@ -194,16 +206,13 @@ any '/sdk/point' => sub {
 any '/sdk/send_action' => sub {
 	set serializer => 'JSON';
 
-
-	use Storable qw( dclone );
-
 	my $param = dclone request->params;
     my $taintd = delete $param->{sign};
     my $sign = new zhaoapi::Common::MD5({ key => '22222222' });
 
-    # unless($taintd and $taintd eq $sign->md5digest( $param ) ){
-    #     return {'status'=> 0, 'msg'=>'sign wrong' };
-    # }
+    unless($taintd and $taintd eq $sign->md5digest( $param ) ){
+        return {'status'=> 0, 'msg'=>'sign wrong' };
+    }
 
 
 	unless( $param->{promotion_id} and $param->{publisher_id} ){
@@ -228,6 +237,10 @@ any '/sdk/send_action' => sub {
 		return {'status' => -1, 'msg' => 'has action'};
 	}
 
+	my $t_earnings = $promotion->earnings;
+	my $t_expenses = $promotion->expenses;
+
+
 	schema->resultset('Action')->create({
             achieve_id    => \'uuid()',
             date          => \'CURDATE()',
@@ -235,6 +248,8 @@ any '/sdk/send_action' => sub {
             promotion_id  => $param->{promotion_id},
             publisher_id  => $param->{publisher_id},
             create_time   => \'NOW()',
+			earnings   	  => $t_earnings,
+	        expenses   	  => $t_expenses,
 		});
 
 	my $now = DateTime->today( time_zone => 'Asia/Shanghai' );
@@ -244,8 +259,6 @@ any '/sdk/send_action' => sub {
             promotion_id  => $param->{promotion_id},
             publisher_id  => $param->{publisher_id},
 		});
-	my $t_earnings = $promotion->earnings;
-	my $t_expenses = $promotion->expenses;
 
 	$report->update({
 			achieve => \'achieve + 1',
@@ -269,47 +282,26 @@ any '/sdk/send_action' => sub {
 
 
 any '/sdk/action' => sub {
-
-	my $promotions = {
-		12 => {
-			'earnings'  => 4,
-			'expenses'	=> 3,
-			'status'	=> 1,
-		},
-		13 => {
-			'earnings'  => 5,
-			'expenses'	=> 3.5,
-			'status'	=> 1,
-		},
-		14 => {
-			'earnings'  => 3.5,
-			'expenses'	=> 2.5,
-			'status'	=> 1,
-		},
-		15 => {
-			'earnings'  => 5,
-			'expenses'	=> 2.5,
-			'status'	=> 1,
-		}
-	};
-
-	my $publisher_margin = 100;
-
-	use Storable qw( dclone );
-
 	my $param = dclone request->params;
 
 	unless( $param->{promotion_id} and $param->{publisher_id} ){
 		return {'status' => 0, 'msg' => 'lost_params'}; 
 	}
 
-	my $point = $promotions->{$param->{promotion_id}}->{'expenses'} * $publisher_margin || 0;
+	### 拿到活动信息
+	my $promotion = schema->resultset('Promotion')->find($param->{promotion_id});
+
+	##  拿到媒体信息
+	my $publisher = schema->resultset('Publisher')->find($param->{publisher_id});
+ 	my $publisher_margin = $publisher->exchange * 100;
+
+	my $point = $promotion->expenses * $publisher_margin || 0;
 
 	if($param->{clear}){
 		schema->resultset('Action')->search({})->delete;
 		return {'status' => 1, 'msg' => 'deleted'};
 	}
-	elsif( exists $promotions->{$param->{promotion_id}} ){
+	elsif( $promotion ){
 		my $action = schema->resultset('Action')->search({
 				user_id => 1,
 				promotion_id => $param->{promotion_id},
@@ -319,6 +311,10 @@ any '/sdk/action' => sub {
 			return {'status' => 0, 'msg' => 'has action'};
 		}
 
+		my $t_earnings = $promotion->earnings;
+		my $t_expenses = $promotion->expenses;
+
+
 		schema->resultset('Action')->create({
 	            achieve_id    => \'uuid()',
 	            date          => \'CURDATE()',
@@ -326,10 +322,28 @@ any '/sdk/action' => sub {
 	            promotion_id  => $param->{promotion_id},
 	            publisher_id  => $param->{publisher_id},
 	            create_time   => \'NOW()',
+	            earnings   	  => $t_earnings,
+	            expenses   	  => $t_expenses,
 			});
 
+
+		my $now = DateTime->today( time_zone => 'Asia/Shanghai' );
+
+		my $report = schema->resultset('ReportOfAction')->find_or_create({
+	            date          => $now,
+	            promotion_id  => $param->{promotion_id},
+	            publisher_id  => $param->{publisher_id},
+			});
+
+		$report->update({
+				achieve => \'achieve + 1',
+				earnings => \"earnings + $t_earnings",
+				expenses => \"expenses + $t_expenses",
+			});
+
+
 		my $user_point  = schema->resultset('UserPoint')->find_or_create({
-	            publisher_id    => 1,
+	            publisher_id  => 1,
         		user_id  => 1,
 			});
 
@@ -347,6 +361,31 @@ any '/sdk/action' => sub {
 };
 
 
+any '/sdk/click' => sub {
+	my $param = dclone request->params;
+
+	unless( $param->{promotion_id} and $param->{publisher_id} ){
+		return {'status' => 0, 'msg' => 'lost_params'}; 
+	}
+
+	my $promotion = schema->resultset('Promotion')->find($param->{promotion_id});
+
+	my $location = $promotion->location;
+
+	my $now = DateTime->today( time_zone => 'Asia/Shanghai' );
+
+	my $report = schema->resultset('ReportOfAction')->find_or_create({
+            date          => $now,
+            promotion_id  => $param->{promotion_id},
+            publisher_id  => $param->{publisher_id},
+		});
+
+	$report->update({
+			click => \'click + 1',
+		});
+
+	redirect  $location;
+};
 
 
 true;

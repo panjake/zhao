@@ -157,6 +157,20 @@ __PACKAGE__->add_columns(
   { data_type => "integer", is_nullable => 1 },
   "publisher_id",
   { data_type => "integer", is_nullable => 1 },
+    "earnings",
+  {
+    data_type => "decimal",
+    default_value => "0.0000",
+    is_nullable => 0,
+    size => [13, 4],
+  },
+  "expenses",
+  {
+    data_type => "decimal",
+    default_value => "0.0000",
+    is_nullable => 0,
+    size => [13, 4],
+  },
   "last_update",
   {
     data_type => "timestamp",
