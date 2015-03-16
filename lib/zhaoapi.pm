@@ -285,6 +285,12 @@ any '/sdk/send_action' => sub {
 any '/sdk/action' => sub {
 	my $param = dclone request->params;
 
+
+	if($param->{clear}){
+		schema->resultset('Action')->search({})->delete;
+		return {'status' => 1, 'msg' => 'deleted'};
+	}
+	
 	unless( $param->{promotion_id} and $param->{publisher_id} ){
 		return {'status' => 0, 'msg' => 'lost_params'}; 
 	}
@@ -298,11 +304,8 @@ any '/sdk/action' => sub {
 
 	my $point = $promotion->expenses * $publisher_margin || 0;
 
-	if($param->{clear}){
-		schema->resultset('Action')->search({})->delete;
-		return {'status' => 1, 'msg' => 'deleted'};
-	}
-	elsif( $promotion ){
+	
+	if( $promotion ){
 		my $action = schema->resultset('Action')->search({
 				user_id => 1,
 				promotion_id => $param->{promotion_id},
