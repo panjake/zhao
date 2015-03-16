@@ -80,5 +80,4 @@ __PACKAGE__->belongs_to( 'promotion' => 'zhaoapi::Schema::Result::Promotion', 'p
 
 
 # You can replace this text with custom content, and it will be preserved on regeneration
-__PACKAGE__->meta->make_immutable;
 1;
