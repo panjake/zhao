@@ -13,6 +13,7 @@ use zhaoapi::Manager;
 
 use utf8;
 use zhaoapi::Common::MD5;
+use DateTime;
 
 
 
@@ -69,7 +70,7 @@ any '/sdk/list' => sub {
 		  #           'item'  => [],
 	   #      	};
     # }
-    
+
 	my $has_action = {};
 	my $items = [];
 	my $publisher = schema->resultset('Publisher')->search({
@@ -103,7 +104,7 @@ any '/sdk/list' => sub {
 		   $check = 1;
 		}
 		my $point = $publisher_margin * $item->expenses || 0;
-		my $jump = 'http://www.baidu.com?promotion_id='.$item->id;
+		my $jump = 'http://182.92.131.59/shihuo_1.0.8_online_zol.apk';
 
 		push @$items, {
 			earnings => $item->earnings,
@@ -193,7 +194,6 @@ any '/sdk/point' => sub {
 any '/sdk/send_action' => sub {
 	set serializer => 'JSON';
 
-	my $publisher_margin = 100;
 
 	use Storable qw( dclone );
 
@@ -201,78 +201,69 @@ any '/sdk/send_action' => sub {
     my $taintd = delete $param->{sign};
     my $sign = new zhaoapi::Common::MD5({ key => '22222222' });
 
-    unless($taintd and $taintd eq $sign->md5digest( $param ) ){
-        return {'status'=> 0, 'msg'=>'sign wrong' };
-    }
-
-	my $promotions = {
-		12 => {
-			'earnings'  => 4,
-			'expenses'	=> 3,
-			'status'	=> 1,
-		},
-		13 => {
-			'earnings'  => 5,
-			'expenses'	=> 3.5,
-			'status'	=> 1,
-		},
-		14 => {
-			'earnings'  => 3.5,
-			'expenses'	=> 2.5,
-			'status'	=> 1,
-		},
-		15 => {
-			'earnings'  => 5,
-			'expenses'	=> 2.5,
-			'status'	=> 1,
-		}
-	};
+    # unless($taintd and $taintd eq $sign->md5digest( $param ) ){
+    #     return {'status'=> 0, 'msg'=>'sign wrong' };
+    # }
 
 
 	unless( $param->{promotion_id} and $param->{publisher_id} ){
 		return {'status' => 0, 'msg' => 'lost_params'}; 
 	}
 
-	my $point = $promotions->{$param->{promotion_id}}->{'expenses'} * $publisher_margin || 0;
+    ### 拿到活动信息
+	my $promotion = schema->resultset('Promotion')->find($param->{promotion_id});
 
-	if($param->{clear}){
-		schema->resultset('Action')->search({})->delete;
-		return {'status' => 1, 'msg' => 'deleted'};
+	##  拿到媒体信息
+	my $publisher = schema->resultset('Publisher')->find($param->{publisher_id});
+ 	my $publisher_margin = $publisher->exchange * 100;
+
+	my $point = $promotion->expenses * $publisher_margin || 0;
+
+	my $action = schema->resultset('Action')->search({
+			user_id => 1,
+			promotion_id => $param->{promotion_id},
+		})->first;
+
+	if($action){
+		return {'status' => -1, 'msg' => 'has action'};
 	}
-	elsif( exists $promotions->{$param->{promotion_id}} ){
-		my $action = schema->resultset('Action')->search({
-				user_id => 1,
-				promotion_id => $param->{promotion_id},
-			})->first;
 
-		if($action){
-			return {'status' => -1, 'msg' => 'has action'};
-		}
+	schema->resultset('Action')->create({
+            achieve_id    => \'uuid()',
+            date          => \'CURDATE()',
+            user_id       => 1,
+            promotion_id  => $param->{promotion_id},
+            publisher_id  => $param->{publisher_id},
+            create_time   => \'NOW()',
+		});
 
-		schema->resultset('Action')->create({
-	            achieve_id    => \'uuid()',
-	            date          => \'CURDATE()',
-	            user_id       => 1,
-	            promotion_id  => $param->{promotion_id},
-	            publisher_id  => $param->{publisher_id},
-	            create_time   => \'NOW()',
-			});
+	my $now = DateTime->today( time_zone => 'Asia/Shanghai' );
 
-		my $user_point  = schema->resultset('UserPoint')->find_or_create({
-	            publisher_id    => 1,
-        		user_id  => 1,
-			});
+	my $report = schema->resultset('ReportOfAction')->find_or_create({
+            date          => $now,
+            promotion_id  => $param->{promotion_id},
+            publisher_id  => $param->{publisher_id},
+		});
+	my $t_earnings = $promotion->earnings;
+	my $t_expenses = $promotion->expenses;
 
-		$point = $user_point->point + $point;
+	$report->update({
+			achieve => \'achieve + 1',
+			earnings => \"earnings + $t_earnings",
+			expenses => \"expenses + $t_expenses",
+		});
 
-		$user_point->point($point);
-		$user_point->update;
+	my $user_point  = schema->resultset('UserPoint')->find_or_create({
+            publisher_id    => 1,
+    		user_id  => 1,
+		});
 
-		return {'status' => 1, 'msg' => 'successed'};
-	}
-	else{
-		return {'status' => -2, 'msg' => 'promotion not found'};
-	}
+	$point = $user_point->point + $point;
+
+	$user_point->point($point);
+	$user_point->update;
+
+	return {'status' => 1, 'msg' => 'successed'};
 
 };
 
