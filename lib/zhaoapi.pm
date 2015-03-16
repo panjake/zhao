@@ -16,6 +16,7 @@ use zhaoapi::Common::MD5;
 use Storable qw( dclone );
 use DateTime;
 use URI;
+use URI::Escape qw/uri_escape/;
 
 
 our $VERSION = '0.1';
@@ -106,7 +107,7 @@ any '/sdk/list' => sub {
 		}
 		my $point = $publisher_margin * $item->expenses || 0;
 		my $jump = request->uri_base."/sdk/click?promotion_id=".$item->id."&publisher_id=".$publisher->id;
-		$jump = new URI($jump);
+		$jump = uri_escape($jump);
 		
 		push @$items, {
 			promotionId => $item->id,
