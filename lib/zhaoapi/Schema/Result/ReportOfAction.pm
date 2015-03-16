@@ -1,15 +1,33 @@
 package zhaoapi::Schema::Result::ReportOfAction;
 
+
 # Created by DBIx::Class::Schema::Loader
 # DO NOT MODIFY THE FIRST PART OF THIS FILE
+
+=head1 NAME
+
+zhaoapi::Schema::Result::Media
+
+=cut
 
 use strict;
 use warnings;
 
-use Moose;
-use MooseX::NonMoose;
-use namespace::autoclean;
-extends 'zhaoapi::Schema::Result';
+use base 'DBIx::Class::Core';
+
+=head1 COMPONENTS LOADED
+
+=over 4
+
+=item * L<DBIx::Class::InflateColumn::DateTime>
+
+=back
+
+=cut
+
+__PACKAGE__->load_components("InflateColumn::DateTime");
+
+
 
 __PACKAGE__->table("report_of_action");
 __PACKAGE__->add_columns(
