@@ -62,15 +62,15 @@ any '/sdk/list' => sub {
     my $taintd = delete $param->{sign};
     my $sign = new zhaoapi::Common::MD5({ key => '22222222' });
 
-    # unless($taintd and $taintd eq $sign->md5digest( $param ) ){
-    #     return  {
-	   #      		'status' => 0,
-		  #           'title'   => '免费获取金币',
-		  #           'currency' => '金币',
-		  #           'ts'		=> time,
-		  #           'item'  => [],
-	   #      	};
-    # }
+    unless($taintd and $taintd eq $sign->md5digest( $param ) ){
+        return  {
+	        		'status' => 0,
+		            'title'   => '',
+		            'currency' => '',
+		            'ts'		=> time,
+		            'item'  => [],
+	        	};
+    }
 
 	my $has_action = {};
 	my $items = [];
@@ -134,8 +134,8 @@ any '/sdk/list' => sub {
 		});
 
 		$report->update({
-				view => \'view + 1',
-			});
+			view => \'view + 1',
+		});
 	}
 
     my $json = {'status' => 1,
@@ -290,7 +290,7 @@ any '/sdk/action' => sub {
 		schema->resultset('Action')->search({})->delete;
 		return {'status' => 1, 'msg' => 'deleted'};
 	}
-	
+
 	unless( $param->{promotion_id} and $param->{publisher_id} ){
 		return {'status' => 0, 'msg' => 'lost_params'}; 
 	}
