@@ -15,7 +15,7 @@ use utf8;
 use zhaoapi::Common::MD5;
 use Storable qw( dclone );
 use DateTime;
-
+use URI;
 
 
 our $VERSION = '0.1';
@@ -105,8 +105,9 @@ any '/sdk/list' => sub {
 		   $check = 1;
 		}
 		my $point = $publisher_margin * $item->expenses || 0;
-		my $jump = 'http://182.92.131.59/shihuo_1.0.8_online_zol.apk';
-
+		my $jump = request->uri_base."/sdk/click?promotion_id=".$item->id."&publisher_id=".$publisher->id;
+		$jump = new URI($jump);
+		
 		push @$items, {
 			promotionId => $item->id,
 			earnings => $item->earnings,
