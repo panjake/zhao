@@ -34,6 +34,7 @@ plugins:
         - AutoCommit: 1
           RaiseError: 1
           PrintError: 1
+          mysql_enable_utf8: 1
 
 
 # plugins:
@@ -41,12 +42,13 @@ plugins:
 #     default:
 #       schema_class: zhaoapi::Schema
 #       connect_info:
-#         - "DBI:mysql:zhao:123.56.91.174:3306"
+#         - "DBI:mysql:zhao:182.92.131.59:3306"
 #         - zhaoyao
 #         - panwujie
 #         - AutoCommit: 1
 #           RaiseError: 1
 #           PrintError: 1
+#           mysql_enable_utf8: 1
 
 	# dbicdump -o dump_directory=./Schema \
  #         -o components='["InflateColumn::DateTime"]' \
