@@ -107,7 +107,7 @@ any '/sdk/list' => sub {
 		}
 		my $point = $publisher_margin * $item->expenses || 0;
 		my $jump = request->uri_base."/sdk/click?promotion_id=".$item->id."&publisher_id=".$publisher->id;
-		$jump = uri_escape($jump);
+		#$jump = uri_escape($jump);
 		
 		push @$items, {
 			promotionId => $item->id,
