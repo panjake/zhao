@@ -78,7 +78,7 @@ any '/sdk/list' => sub {
 	my $publisher = schema->resultset('Publisher')->search({
  			publisher_id => 1,
  		})->first;
- 	my $publisher_margin = $publisher->exchange * 100;
+ 	#my $publisher_margin = $publisher->exchange * 100;
 
 
 	my $promotion = schema->resultset('Promotion')->search({
@@ -105,7 +105,7 @@ any '/sdk/list' => sub {
 		if($package_name ne ''){
 		   $check = 1;
 		}
-		my $point = $publisher_margin * $item->expenses || 0;
+		my $point = $publisher->exchange * $item->expenses || 0;
 		my $jump = request->uri_base."/sdk/click?promotion_id=".$item->id."&publisher_id=".$publisher->id;
 		#$jump = uri_escape($jump);
 		
@@ -226,9 +226,9 @@ any '/sdk/send_action' => sub {
 
 	##  拿到媒体信息
 	my $publisher = schema->resultset('Publisher')->find($param->{publisher_id});
- 	my $publisher_margin = $publisher->exchange * 100;
+ 	#my $publisher_margin = $publisher->exchange * 100;
 
-	my $point = $promotion->expenses * $publisher_margin || 0;
+	my $point = $promotion->expenses * $publisher->exchange || 0;
 
 	my $action = schema->resultset('Action')->search({
 			user_id => 1,
@@ -301,9 +301,9 @@ any '/sdk/action' => sub {
 
 	##  拿到媒体信息
 	my $publisher = schema->resultset('Publisher')->find($param->{publisher_id});
- 	my $publisher_margin = $publisher->exchange * 100;
+ 	#my $publisher_margin = $publisher->exchange * 100;
 
-	my $point = $promotion->expenses * $publisher_margin || 0;
+	my $point = $promotion->expenses * $publisher->exchange || 0;
 
 	
 	if( $promotion ){
